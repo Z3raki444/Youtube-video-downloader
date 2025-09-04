@@ -15,7 +15,7 @@ def progress_hook(d):
         root.update()
         messagebox.showinfo("Success", f"Download complete:\n{d['filename']}")
 
-def download_video():
+def download_audio():
     url = url_entry.get().strip()
     save_path = save_entry.get().strip()
 
@@ -26,27 +26,16 @@ def download_video():
         messagebox.showerror("Error", "Please select a download folder.")
         return
 
-    audio_only = option_var.get() == "Audio"
-
     ydl_opts = {
         'outtmpl': f'{save_path}/%(title)s.%(ext)s',
+        'format': 'bestaudio/best',
         'progress_hooks': [progress_hook],
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
     }
-
-    if audio_only:
-        # Audio-only download
-        ydl_opts.update({
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-        })
-    else:
-        # Video + audio download (requires FFmpeg)
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
-        ydl_opts['merge_output_format'] = 'mp4'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -62,8 +51,8 @@ def browse_folder():
 
 # ----------------- GUI -----------------
 root = tk.Tk()
-root.title("YouTube Downloader")
-root.geometry("500x250")
+root.title("YouTube Audio Downloader")
+root.geometry("500x200")
 
 tk.Label(root, text="YouTube URL:").pack(pady=5)
 url_entry = tk.Entry(root, width=60)
@@ -77,14 +66,7 @@ save_entry.pack(side=tk.LEFT, padx=5)
 browse_btn = tk.Button(save_frame, text="Browse", command=browse_folder)
 browse_btn.pack(side=tk.LEFT)
 
-tk.Label(root, text="Download Option:").pack(pady=5)
-option_var = tk.StringVar(value="Video")
-video_radio = tk.Radiobutton(root, text="Video", variable=option_var, value="Video")
-audio_radio = tk.Radiobutton(root, text="Audio-only", variable=option_var, value="Audio")
-video_radio.pack()
-audio_radio.pack()
-
-download_btn = tk.Button(root, text="Download", command=download_video, bg="green", fg="white")
+download_btn = tk.Button(root, text="Download Audio", command=download_audio, bg="green", fg="white")
 download_btn.pack(pady=10)
 
 status_label = tk.Label(root, text="", fg="blue")
